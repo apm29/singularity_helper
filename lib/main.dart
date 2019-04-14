@@ -38,17 +38,12 @@ class MyApp extends StatelessWidget {
                   }
                 });
           },
-          "/login": (_) => LoginPage(),
           "/verify": (_) {
             return BlocProvider<VerifyBloc>(
               child: VerifyPage(),
               bloc: VerifyBloc(),
             );
           },
-          "/home": (_) => BlocProvider<ProfileBloc>(
-                bloc: ProfileBloc(),
-                child: HomePage(),
-              ),
         },
       ),
     );
@@ -437,7 +432,7 @@ class _VerifyPageState extends State<VerifyPage> {
                   });
                   Fluttertoast.showToast(msg: baseResp.msg);
                   if (baseResp.success()) {
-                    Navigator.of(context).pushReplacementNamed("/home");
+                    Navigator.of(context).pushReplacementNamed("/");
                   }
                 },
               )
