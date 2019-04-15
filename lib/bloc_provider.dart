@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:singularity_helper/dio_util.dart';
 import 'package:singularity_helper/main.dart';
+import 'package:contacts_service/contacts_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class BlocProvider<T extends BlocBase> extends StatefulWidget {
   final Widget child;
@@ -56,6 +58,8 @@ class ApplicationBloc extends BlocBase {
     var event = UserInfo.fromJson(map);
     print('$event');
     _userStateController.add(event);
+
+    getAllContacts();
   }
 
   void login(Map<String, dynamic> json) {
@@ -70,6 +74,18 @@ class ApplicationBloc extends BlocBase {
     sharedPreferences.setString("userInfo", null);
     sharedPreferences.setString("access_token", null);
     _userStateController.add(null);
+  }
+
+  void getAllContacts() async {
+    var map = await PermissionHandler()
+        .requestPermissions([PermissionGroup.contacts]);
+    if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
+      // Get all contacts on device
+      Iterable<Contact> contacts = await ContactsService.getContacts();
+      contacts.map((contact){
+        print('${contact.displayName}');
+      });
+    }
   }
 }
 
@@ -98,9 +114,11 @@ class VerifyBloc extends BlocBase {
 
   Observable<Map<String, dynamic>> get bankCode => _bankCodeController.stream;
 
-  BehaviorSubject<MapEntry<String, dynamic>> _currentBankController = BehaviorSubject();
+  BehaviorSubject<MapEntry<String, dynamic>> _currentBankController =
+      BehaviorSubject();
 
-  Observable<MapEntry<String, dynamic>> get currentBank => _currentBankController.stream;
+  Observable<MapEntry<String, dynamic>> get currentBank =>
+      _currentBankController.stream;
 
   @override
   void dispose() {
@@ -109,15 +127,15 @@ class VerifyBloc extends BlocBase {
   }
 
   VerifyBloc() {
-    DioUtil.getInstance()
-        .post("/v1/common/bankcode", {}).then((BaseResp<Map<String,dynamic>> value) {
+    DioUtil.getInstance().post("/v1/common/bankcode", {}).then(
+        (BaseResp<Map<String, dynamic>> value) {
       if (value.success() && value.data != null) {
-          _bankCodeController.add(value.data);
+        _bankCodeController.add(value.data);
       }
     });
   }
 
-  void setCurrentBank(MapEntry<String,dynamic> pair){
+  void setCurrentBank(MapEntry<String, dynamic> pair) {
     _currentBankController.add(pair);
   }
 }

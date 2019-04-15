@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:singularity_helper/bloc_provider.dart';
 import 'package:singularity_helper/dio_util.dart';
@@ -5,6 +7,8 @@ import 'package:singularity_helper/ticker_widget.dart';
 import 'dart:math' show pi;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/material.dart';
 
 SharedPreferences sharedPreferences;
 
@@ -44,6 +48,7 @@ class MyApp extends StatelessWidget {
               bloc: VerifyBloc(),
             );
           },
+          "/service": (_) => ServiceProtocolPage(),
         },
       ),
     );
@@ -217,10 +222,15 @@ class _LoginPageState extends State<LoginPage> {
                       CupertinoIcons.check_mark_circled,
                       color: CupertinoColors.activeGreen,
                     ),
-                    Text(
-                      "登录即视为同意《齐点助手服务协议》",
-                      style: TextStyle(
-                          fontSize: 12, color: CupertinoColors.inactiveGray),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pushNamed("/service");
+                      },
+                      child: Text(
+                        "登录即视为同意《齐点助手服务协议》",
+                        style: TextStyle(
+                            fontSize: 12, color: CupertinoColors.inactiveGray),
+                      ),
                     )
                   ],
                 )
@@ -537,7 +547,8 @@ class _HomePageState extends State<HomePage> {
               );
             }
 
-            var _realName = mask(snapshot.data.real_name, 1, snapshot.data.real_name.length, 2);
+            var _realName = mask(
+                snapshot.data.real_name, 1, snapshot.data.real_name.length, 2);
             var _bankName = snapshot.data.bank_name;
             var _mobile = mask(snapshot.data.mobile, 3, 7, 4);
 
@@ -645,13 +656,41 @@ class _HomePageState extends State<HomePage> {
 
   String mask(
       String originString, int startIndex, int endIndex, int maskCount) {
-    if (startIndex >= originString.length ||
-        endIndex < startIndex) {
+    if (startIndex >= originString.length || endIndex < startIndex) {
       return originString;
     }
     var startString = originString.substring(0, startIndex);
     var endString = originString.substring(endIndex);
     var masked = "*" * maskCount;
     return startString + masked + endString;
+  }
+}
+
+class ServiceProtocolPage extends StatefulWidget {
+  @override
+  _ServiceProtocolPageState createState() => _ServiceProtocolPageState();
+}
+
+class _ServiceProtocolPageState extends State<ServiceProtocolPage> {
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(
+          "服务协议",
+          style: TextStyle(color: CupertinoColors.white),
+        ),
+        backgroundColor: CupertinoColors.activeBlue,
+        actionsForegroundColor: CupertinoColors.white,
+      ),
+      child: Container(
+        padding: EdgeInsets.only(
+            top: Platform.isIOS ? MediaQuery.of(context).padding.top : 0),
+        child: WebView(
+          javascriptMode: JavascriptMode.unrestricted,
+          initialUrl: "https://www.baidu.com",
+        ),
+      ),
+    );
   }
 }
