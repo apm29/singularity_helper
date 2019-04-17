@@ -59,7 +59,7 @@ class ApplicationBloc extends BlocBase {
     print('$event');
     _userStateController.add(event);
 
-    getAllContacts();
+    //getAllContacts();
   }
 
   void login(Map<String, dynamic> json) {
@@ -82,8 +82,9 @@ class ApplicationBloc extends BlocBase {
     if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
       // Get all contacts on device
       Iterable<Contact> contacts = await ContactsService.getContacts();
-      contacts.map((contact){
-        print('${contact.displayName}');
+      print('${contacts.join(",")}');
+      contacts.map((contact) {
+        print('name=>${contact.displayName}');
       });
     }
   }
@@ -120,10 +121,15 @@ class VerifyBloc extends BlocBase {
   Observable<MapEntry<String, dynamic>> get currentBank =>
       _currentBankController.stream;
 
+  PublishSubject<bool> _contactsController = PublishSubject();
+
+  Observable<bool> get contactPermissionGranted => _contactsController.stream;
+
   @override
   void dispose() {
     _bankCodeController.close();
     _currentBankController.close();
+    _contactsController.close();
   }
 
   VerifyBloc() {
@@ -133,6 +139,18 @@ class VerifyBloc extends BlocBase {
         _bankCodeController.add(value.data);
       }
     });
+
+    //requestPermission();
+  }
+
+  void requestPermission() async {
+    var map = await PermissionHandler()
+        .requestPermissions([PermissionGroup.contacts]);
+    if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
+      _contactsController.add(true);
+    } else {
+      _contactsController.add(false);
+    }
   }
 
   void setCurrentBank(MapEntry<String, dynamic> pair) {

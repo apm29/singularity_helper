@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:singularity_helper/bloc_provider.dart';
 import 'package:singularity_helper/dio_util.dart';
 import 'package:singularity_helper/ticker_widget.dart';
@@ -8,7 +9,6 @@ import 'dart:math' show pi;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter/material.dart';
 
 SharedPreferences sharedPreferences;
 
@@ -114,10 +114,9 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(
                   height: screenHeight * 0.15,
                 ),
-                Icon(
-                  CupertinoIcons.person,
-                  color: CupertinoColors.activeBlue,
-                  size: 50,
+                Image.asset(
+                  "images/ic_launcher.jpg",
+                  height: 50,
                 ),
                 Text("齐点助手"),
                 SizedBox(
@@ -262,6 +261,7 @@ class _VerifyPageState extends State<VerifyPage> {
       height: 0.5,
       color: CupertinoColors.inactiveGray,
     );
+    requestPermission(context);
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(
@@ -484,6 +484,56 @@ class _VerifyPageState extends State<VerifyPage> {
                 );
               });
         });
+  }
+
+  void requestPermission(BuildContext context) async {
+    var status = await PermissionHandler()
+        .checkPermissionStatus(PermissionGroup.contacts);
+    print('$status');
+    if (status != PermissionStatus.granted) {
+      var map = await PermissionHandler()
+          .requestPermissions([PermissionGroup.contacts]);
+      if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
+        //todo upload contacts
+      } else {
+        showDenied(context);
+      }
+    } else {
+      //todo upload contacts
+    }
+  }
+
+  void showDenied(BuildContext context) {
+    showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+            title: Text("警告"),
+            content: Text("您已经拒绝了联系人权限,无法继续进行绑卡操作"),
+            actions: <Widget>[
+              CupertinoButton(
+                onPressed: () {
+                  exit(0);
+                },
+                child: Text("退出应用"),
+              ),
+              CupertinoButton(
+                onPressed: () {
+                  PermissionHandler().openAppSettings();
+                },
+                child: Text("前往设置"),
+              ),
+              CupertinoButton(
+                onPressed: () {
+                  requestPermission(context);
+                },
+                child: Text("再次请求"),
+              ),
+            ],
+          );
+        }).then((v) {
+      requestPermission(context);
+    });
   }
 }
 
