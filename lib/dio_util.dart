@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:singularity_helper/main.dart';
+
 ///应佳伟
 class DioUtil {
   static DioUtil _instance;
@@ -72,7 +73,7 @@ class DioUtil {
   }
 
   Future<BaseResp<Map<String, dynamic>>> post(
-      String path, Map<String, String> data) async {
+      String path, Map<String, dynamic> data) async {
     return dio.post<String>(path, data: data).then((resp) {
       if (resp.statusCode == 200) {
         var rawString = resp.data;
@@ -106,6 +107,22 @@ class BaseResp<T> {
   @override
   String toString() {
     return '{"code": "$code", "msg": "$msg", "data": "$data"}';
+  }
+}
+
+class ContactInfo {
+  final String phone;
+  final String name;
+
+  ContactInfo(this.phone, this.name);
+
+  @override
+  String toString() {
+    return '{"phone":"$phone","name":"$name"}';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {"phone": phone, "name": name};
   }
 }
 

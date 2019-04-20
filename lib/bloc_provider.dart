@@ -76,18 +76,18 @@ class ApplicationBloc extends BlocBase {
     _userStateController.add(null);
   }
 
-  void getAllContacts() async {
-    var map = await PermissionHandler()
-        .requestPermissions([PermissionGroup.contacts]);
-    if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
-      // Get all contacts on device
-      Iterable<Contact> contacts = await ContactsService.getContacts();
-      print('${contacts.join(",")}');
-      contacts.map((contact) {
-        print('name=>${contact.displayName}');
-      });
-    }
-  }
+//  void getAllContacts() async {
+//    var map = await PermissionHandler()
+//        .requestPermissions([PermissionGroup.contacts]);
+//    if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
+//      // Get all contacts on device
+//      Iterable<Contact> contacts = await ContactsService.getContacts();
+//      print('${contacts.join(",")}');
+//      contacts.map((contact) {
+//        print('name=>${contact.displayName}');
+//      });
+//    }
+//  }
 }
 
 class ProfileBloc extends BlocBase {
@@ -143,15 +143,15 @@ class VerifyBloc extends BlocBase {
     //requestPermission();
   }
 
-  void requestPermission() async {
-    var map = await PermissionHandler()
-        .requestPermissions([PermissionGroup.contacts]);
-    if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
-      _contactsController.add(true);
-    } else {
-      _contactsController.add(false);
-    }
-  }
+//  void requestPermission() async {
+//    var map = await PermissionHandler()
+//        .requestPermissions([PermissionGroup.contacts]);
+//    if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
+//      _contactsController.add(true);
+//    } else {
+//      _contactsController.add(false);
+//    }
+//  }
 
   void setCurrentBank(MapEntry<String, dynamic> pair) {
     _currentBankController.add(pair);

