@@ -85,7 +85,6 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     _nameController = TextEditingController();
     _passController = TextEditingController();
-    requestPermission(context);
     super.initState();
   }
 
