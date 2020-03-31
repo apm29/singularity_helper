@@ -14,6 +14,7 @@ import 'package:contacts_service/contacts_service.dart';
 SharedPreferences sharedPreferences;
 
 Future main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   sharedPreferences = await SharedPreferences.getInstance();
   runApp(MyApp());
 }
@@ -84,6 +85,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     _nameController = TextEditingController();
     _passController = TextEditingController();
+    requestPermission(context);
     super.initState();
   }
 

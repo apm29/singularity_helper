@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:singularity_helper/main.dart';
 
@@ -22,7 +23,16 @@ class DioUtil {
       receiveTimeout: 6000,
       baseUrl: "http://qi_api.junleizg.com.cn",
     ));
-
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+        (client) {
+      // config the http client
+      client.findProxy = (uri) {
+        //proxy all request to localhost:8888
+        return "PROXY 192.168.99.182:8888";
+      };
+      // you can also create a new HttpClient to dio
+      // return new HttpClient();
+    };
     dio.interceptors.add(InterceptorsWrapper(onRequest: (RequestOptions req) {
       req.headers.addAll({"content-type": "application/json;charset=utf-8"});
       if (req.data is Map) {
@@ -61,7 +71,6 @@ class DioUtil {
       print("Message:${err.message}");
       print("Error:${err.error}");
       print("Type:${err.type}");
-      print("Trace:${err.stackTrace}");
       print("===========================================");
       print("  RESULT:");
       print("    Headers:${err.response.headers}");
